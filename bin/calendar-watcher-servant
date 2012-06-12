@@ -1,7 +1,11 @@
 #!/usr/bin/ruby1.8
 require 'rubygems'
+require 'belphanior/servant_caller'
 require 'belphanior/servant/servant'
 require 'belphanior/servant/calendar_watcher/calendar_watcher'
+require 'json'
+require 'logger'
+require 'net/http'
 require 'sinatra'
 
 # Watches an iCal-compatible calendar and---when a "tick" message is sent---
@@ -13,12 +17,10 @@ servant_init
 REQUIRED_VARIABLES = %q{
 calendar url: The URL of the calendar that should be read.
 servant url: The URL of the protocol for the target servant.
-command: The command to send to the target servant.
 }
 
 if servant_config.get("calendar url") == nil or
-    servant_config.get("servant url") == nil or
-    servant_config.get("command") == nil then
+    servant_config.get("servant url") == nil then
   puts "Some required variables were missing."
   puts REQUIRED_VARIABLES
   exit true
@@ -37,6 +39,47 @@ add_role_description(
                  ]
   })
 
+def build_role_hash(roles)
+  role_hash = {}
+  roles.each do |role|
+    role_url = role["role_url"]
+    if role_url.start_with? "/" then
+      role_uri = URI(servant_config.get("servant url")) + role_url
+    else
+      role_uri = URI(role_url)
+    end
+    puts "Connect to #{role_uri}"
+    role_code = JSON.parse(Net::HTTP.get_response(role_uri).body)
+    role_hash[role_uri.to_s] = role_code
+  end
+
+  role_hash
+end
+
+def connect_to_servant
+  # TODO(mtomczak): This should be refactored into common library code.
+  protocol_uri = URI(servant_config.get("servant url") + "/protocol")
+  puts "Connect to #{protocol_uri}"
+  protocol = JSON.parse(Net::HTTP.get_response(protocol_uri).body)
+  roles = build_role_hash(protocol["roles"])
+
+  Belphanior::ServantCaller.new(
+    Logger.new(STDOUT),
+    servant_config.get("servant url"),
+    protocol,
+    roles)
+
+end
+
+def do_events(event_names)
+  caller = connect_to_servant
+  event_names.each do |event_name|
+    caller.tell_by_name("commandable") do |servant|
+      servant.do event_name
+    end
+  end
+end
+
 add_handler("step", "", "POST", "/step", "") {
   new_datetime = DateTime.now
   watcher = Belphanior::Servant::CalendarWatcher::CalendarWatcher.new(
@@ -44,15 +87,14 @@ add_handler("step", "", "POST", "/step", "") {
   puts "Retrieving events between #{settings.last_time} and #{new_datetime}"
   event_names = watcher.get_events_between_times(settings.last_time, new_datetime)
   set(:last_time, new_datetime)
-  # TODO(mtomczak): Act on all watched events.
-  puts event_names
+  do_events event_names
 }
 
 get "/calendar" do
   new_datetime = DateTime.new
   watcher = Belphanior::Servant::CalendarWatcher::CalendarWatcher.new(
     servant_config.get("calendar url"))
-  watcher.get_events_between_times(DateTime.parse("1/1/2012"), DateTime.parse("12/12/2012"))
+  do_events (watcher.get_events_between_times(DateTime.parse("1/1/2012"), DateTime.parse("12/12/2012")))
 end
 
 set(:last_time, DateTime.now)
