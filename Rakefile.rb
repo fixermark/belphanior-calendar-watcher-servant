@@ -15,9 +15,9 @@ gemspec = Gem::Specification.new do |s|
   s.add_dependency("ri_cal", ">= 0.8")  # https://github.com/rubyredrick/ri_cal/
   s.description =  %q{Watches a specified iCal calendar for events. When the time
                       for an event comes, runs the event on a specified servant.}
-  s.files = [ "lib/belphanior/servant/calendar-watcher/calendar_watcher.rb",
+  s.files = [ "lib/belphanior/servant/calendar_watcher/calendar_watcher.rb",
               "bin/calendar_watcher_servant" ]
-  s.test_files = Dir.glob('lib/belphanior/servant/calendar-watcher/test/tc_*.rb')
+  s.test_files = Dir.glob('lib/belphanior/servant/calendar_watcher/test/tc_*.rb')
 end
 
 
