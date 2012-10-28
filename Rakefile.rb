@@ -16,7 +16,7 @@ gemspec = Gem::Specification.new do |s|
   s.description =  %q{Watches a specified iCal calendar for events. When the time
                       for an event comes, runs the event on a specified servant.}
   s.files = [ "lib/belphanior/servant/calendar_watcher/calendar_watcher.rb",
-              "bin/calendar_watcher_servant" ]
+              "bin/calendar-watcher-servant" ]
   s.test_files = Dir.glob('lib/belphanior/servant/calendar_watcher/test/tc_*.rb')
 end
 
