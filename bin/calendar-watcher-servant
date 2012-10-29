@@ -6,6 +6,7 @@ require 'belphanior/servant/calendar_watcher/calendar_watcher'
 require 'json'
 require 'logger'
 require 'net/http'
+require 'uri'
 require 'sinatra'
 
 # Watches an iCal-compatible calendar and---when a "tick" message is sent---
@@ -24,6 +25,10 @@ if servant_config.get("calendar url") == nil or
   puts "Some required variables were missing."
   puts REQUIRED_VARIABLES
   exit true
+end
+
+if servant_config.get("update seconds") == nil then
+  servant_config.set("update seconds", 60)
 end
 
 add_role_description(
@@ -99,3 +104,18 @@ get "/calendar" do
 end
 
 set(:last_time, DateTime.now)
+
+# Self-requesting thread that updates the calendar periodically.
+tick_thread = Thread.new do
+  while true
+    http = Net::HTTP.new(servant_config.get("ip"), servant_config.get("port").to_i)
+    begin
+      request = Net::HTTP::Post.new("/step")
+      request.body = ""
+      http.request(request)
+    rescue
+    end
+    sleep(servant_config.get("update seconds").to_i)
+  end
+end
+
