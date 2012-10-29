@@ -90,6 +90,7 @@ add_handler("step", "", "POST", "/step", "") {
   do_events event_names
 }
 
+# Test command: Tries to execute all operations between 1/1/2012 and 12/12/2012
 get "/calendar" do
   new_datetime = DateTime.new
   watcher = Belphanior::Servant::CalendarWatcher::CalendarWatcher.new(
