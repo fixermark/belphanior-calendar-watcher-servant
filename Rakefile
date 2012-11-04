@@ -5,7 +5,7 @@ require 'rdoc/task'
 require 'rubygems/package_task'
 
 spec = Gem::Specification.new do |s|
-  s.name = %q{belphanior-calendar-watcher}
+  s.name = %q{belphanior-calendar-watcher-servant}
   s.version = "0.0.1"
   s.authors = ["Mark T. Tomczak"]
   s.email = %q{belphanior+calendar-watcher@fixermark.com}
