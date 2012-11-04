@@ -1,0 +1,22 @@
+Watches a specified iCal-format calendar for events. When the time
+for an event comes, sends the name of the event to a servant that
+supports the "commandable" role
+(http://belphanior.net/roles/commandable/v1).
+
+For example, say you have an iCal at www.foo.com/calendar that has an entry
+named "wake me up" at 10AM today. If you have a servant at 127.0.0.1:3000
+that supports "commandable" and understands the "wake me up" command,
+you could run the calendar_watcher_servant with a servant_config file
+that looks as follows:
+{
+  "ip":"127.0.0.1",
+  "port":"4000",
+  "calendar url":"http://www.foo.com/calendar"
+  "servant url":"http://127.0.0.1:3000"
+  "update seconds":"60"
+}
+
+With this configuration, the calendar watcher servant will check the
+calendar every 60 seconds for new events. When it checks after 10AM,
+it will discover the "wake me up" event and send it to the servant at
+127.0.0.1:3000.
